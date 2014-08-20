@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>rk4</title>
+  <link href="http://fonts.googleapis.com/css?family=Raleway:200,300,400,700" rel="stylesheet" type="text/css">
+  <meta name="viewport" content="width=device-width,height=device-height,user-scalable=no,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0">
+  <style>
+
+    body {
+      margin: 0;
+      background-color: #ccc;
+      font-family: "Raleway", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    .nav-header {
+      position: fixed;
+      z-index: 5;
+      top: 0;
+      height: 50px;
+      left: 0;
+      right: 0;
+      background-color: white;
+      /** CHROME BUG: if this isn't a render layer, we
+          can't touch it after we've touched it once :-S **/
+      -webkit-transform: translateZ(0);
+      box-shadow: 0 0 3px 2px rgba(0, 0, 0, .1);
+    }
+
+    .hamburger-menu-handle {
+      position: absolute;
+      right: 20px;
+      top: 10px;
+      padding-left: 1.25em;
+    }
+
+    .hamburger-menu-handle:before {
+      content: "";
+      position: absolute;
+      font-size: 28px;
+      top: 0.25em;
+      left: 0;
+      width: 1em;
+      height: 0.125em;
+      border-top: 0.375em double #FF2A68;
+      border-bottom: 0.125em solid #FF2A68;
+    }
+
+    .pull-down-menu {
+      position: fixed;
+      top: -100%;
+      left: 0;
+      bottom: 100%;
+      padding-top: 50px;
+      right: 0;
+      z-index: 4;
+      background-color: #fafafa;
+    }
+
+    a:link, a:visited {
+      text-decoration: none;
+      color: #FF2A68;
+    }
+
+    a:active {
+      background-color: #FF2A68;
+      color: #fafafa;
+    }
+
+    .links a {
+      display: block;
+      height: 50px;
+      line-height: 50px;
+      font-size: 20;
+      text-align: center;
+      font-size: 20px;
+      border-bottom: 1px solid #ededed;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+
+    .close-handle {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 20px;
+      background-color: #fafafa;
+    }
+
+    .arrow-left, .arrow-right {
+      background-color: #ccc;
+      height: 8px;
+      width: 24px;
+      border-radius: 10px;
+      position: absolute;
+      left: 50%;
+      transition: transform .2s;
+    }
+
+    .arrow-left {
+      transform: translate3d(-8px, 0, 0) rotate(0deg);
+    }
+
+    .arrow-right {
+      transform: translateX3d(8px, 0, 0) rotate(0deg);
+    }
+
+    .open .arrow-left {
+      transform: translate3d(-8px, 0, 0) rotate(-10deg);
+    }
+
+    .open .arrow-right {
+      transform: translate3d(8px, 0, 0) rotate(10deg);
+    }
+
+    .content {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="nav-header">
+    <div class="hamburger-menu-handle"></div>
+  </div>
+  <div class="pull-down-menu">
+    <div class="links">
+       <a href="#">a link</a>
+       <a href="#">another link</a>
+       <a href="#">hamburgers</a>
+       <a href="#">w00tbear</a>
+    </div>
+    <div class="close-handle"><div class="arrow-left"></div><div class="arrow-right"></div></div>
+  </div>
+  <div class="content"></div>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script src="scripts/app.js"></script>
+</body>
+</html>
