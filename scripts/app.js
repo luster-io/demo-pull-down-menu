@@ -565,7 +565,7 @@ function Drag(phys, opts, start) {
 Emitter(Drag.prototype)
 
 Drag.prototype.moved = function() {
-  return (this._interaction.distance() > 2)
+  return (this._interaction.distance() > 10)
 }
 
 Drag.prototype._setupHandle = function(el) {
@@ -585,6 +585,7 @@ Drag.prototype._setupHandle = function(el) {
 }
 
 Drag.prototype._start = function(evt) {
+  this._startTime = Date.now()
   evt.preventDefault()
   this._mousedown = true
   this._interaction = this._phys.interact({
@@ -604,7 +605,6 @@ Drag.prototype._move = function(evt) {
   this._interaction.update(evt)
   this.emit('move', evt)
 }
-
 
 Drag.prototype._end = function(evt) {
   if(!this._mousedown) return
