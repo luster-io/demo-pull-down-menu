@@ -89,6 +89,9 @@
       right: 0;
       height: 60px;
       background-color: #fafafa;
+       /** CHROME BUG: if this isn't a render layer, we
+          can't touch it after we've touched it once :-S **/
+      -webkit-transform: translateZ(0);
     }
 
     .arrow-left, .arrow-right {

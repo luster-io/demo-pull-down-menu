@@ -24,8 +24,6 @@ function end() {
     menuEl.classList.add('open')
     menu.accelerate({ acceleration: 1500, bounceAcceleration: 4000, bounce: this.moved() })
       .to(0, boundry.bottom).start()
-      .then(function() {
-      })
   } else {
     menuEl.classList.remove('open')
     menu.spring({ tension: 100, damping: 15 })
@@ -34,6 +32,7 @@ function end() {
 }
 
 drag.on('end', end)
+
 },{"impulse":10}],2:[function(require,module,exports){
 // shim for using process in browser
 
