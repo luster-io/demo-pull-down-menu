@@ -1,8 +1,8 @@
 {
-  "name": "chat-heads",
+  "name": "demo-pull-down-menu",
   "version": "0.0.0",
   "dependencies": {
-    "impulse": "0.0.1"
+    "impulse": "0.0.4"
   },
   "devDependencies": {
     "gulp": "~3.5.0",
