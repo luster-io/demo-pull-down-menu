@@ -3,12 +3,12 @@ var Physics = require('impulse')
 var menuEl = document.querySelector('.pull-down-menu')
 var handleEls = document.querySelectorAll('.nav-header, .close-handle')
 var isOpen = false
-var boundry = new Physics.Boundry({ top: 0, bottom: window.innerHeight, left: 0, right: 0 })
+var boundary = new Physics.Boundary({ top: 0, bottom: window.innerHeight, left: 0, right: 0 })
 
 var menu = new Physics(menuEl)
   .style('translateY', function(x, y) { return y + 'px' })
 
-var drag = menu.drag({ handle: handleEls, boundry: boundry, direction: 'vertical' })
+var drag = menu.drag({ handle: handleEls, boundary: boundary, direction: 'vertical' })
 
 function end() {
   if(this.moved()) {
@@ -20,14 +20,17 @@ function end() {
     }
   }
 
+  //reset it every time in case the window resizes.
+  boundary.bottom = window.innerHeight
+
   if(isOpen) {
     menuEl.classList.add('open')
     menu.accelerate({ acceleration: 1500, bounceAcceleration: 4000, bounce: this.moved() })
-      .to(0, boundry.bottom).start()
+      .to(0, boundary.bottom).start()
   } else {
     menuEl.classList.remove('open')
     menu.spring({ tension: 100, damping: 15 })
-      .to(0, boundry.top).start()
+      .to(0, boundary.top).start()
   }
 }
 
