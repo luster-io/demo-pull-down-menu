@@ -101,7 +101,7 @@ process.chdir = function (dir) {
 },{}],3:[function(require,module,exports){
 var Body = require('./body')
 var simulation = require('./simulation')
-var Boundry = require('./boundry')
+var Boundary = require('./boundary')
 var Animation = require('./animation')
 var Vector = require('./vector')
 var height = require('./util').height
@@ -119,7 +119,7 @@ var Accelerate = module.exports = Animation({
     var direction = to.sub(from).normalize()
     var acceleration = direction.mult(opts.acceleration)
     var bounceAcceleration = direction.mult(opts.bounceAcceleration || opts.acceleration)
-    var boundry = Boundry({
+    var boundary = Boundary({
       left: (to.x > from.x) ? -Infinity : to.x,
       right: (to.x > from.x) ? to.x : Infinity,
       top: (to.y > from.y) ? -Infinity : to.y,
@@ -141,7 +141,7 @@ var Accelerate = module.exports = Animation({
           return acceleration
       },
       update: function(position, velocity) {
-        if(boundry.contains(position)) {
+        if(boundary.contains(position)) {
           update.state(position, velocity)
         } else {
           if(opts.bounce &&
@@ -163,16 +163,16 @@ var Accelerate = module.exports = Animation({
   }
 })
 
-},{"./animation":4,"./body":6,"./boundry":7,"./simulation":13,"./util":15,"./vector":16}],4:[function(require,module,exports){
+},{"./animation":4,"./body":6,"./boundary":7,"./simulation":13,"./util":15,"./vector":16}],4:[function(require,module,exports){
 var defaults = require('lodash.defaults')
   , Promise = window.Promise || require('promise')
-  , Boundry = require('./boundry')
+  , Boundary = require('./boundary')
   , Vector = require('./vector')
   , Emitter = require('component-emitter')
 
 var proto = {
   to: function(x, y) {
-    if(x instanceof Boundry)
+    if(x instanceof Boundary)
       this._to = x
     else
       this._to = Vector(x, y)
@@ -231,7 +231,7 @@ var proto = {
     this._phys._startAnimation(this)
 
     this._running = true
-    if(to instanceof Boundry)
+    if(to instanceof Boundary)
       to = to.nearestIntersect(from, velocity)
     this._onStart(velocity, from, to, opts, update)
 
@@ -268,7 +268,7 @@ function Animation(callbacks) {
 
 module.exports = Animation
 
-},{"./boundry":7,"./vector":16,"component-emitter":20,"lodash.defaults":21,"promise":28}],5:[function(require,module,exports){
+},{"./boundary":7,"./vector":16,"component-emitter":17,"lodash.defaults":18,"promise":25}],5:[function(require,module,exports){
 var defaults = require('lodash.defaults')
   , Vector = require('./vector')
   , simulation = require('./simulation')
@@ -369,7 +369,7 @@ AttachSpring.prototype.start = function() {
   simulation.addBody(body)
   return this
 }
-},{"./body":6,"./simulation":13,"./vector":16,"lodash.defaults":21}],6:[function(require,module,exports){
+},{"./body":6,"./simulation":13,"./vector":16,"lodash.defaults":18}],6:[function(require,module,exports){
 var Vector = require('./vector')
 
 module.exports = Body
@@ -402,7 +402,7 @@ Body.prototype.atPosition = function(pos) {
 
 },{"./vector":16}],7:[function(require,module,exports){
 var Vector = require('./vector')
-module.exports = Boundry
+module.exports = Boundary
 
 function pointBetween(p, p1, p2) {
   return p >= p1 && p <= p2
@@ -418,7 +418,7 @@ function xIntersect(x, point, direction) {
   return point.add(direction.clone().mult(factor))
 }
 
-Boundry.prototype.applyDamping = function(position, damping) {
+Boundary.prototype.applyDamping = function(position, damping) {
   var x = position.x
     , y = position.y
 
@@ -437,24 +437,24 @@ Boundry.prototype.applyDamping = function(position, damping) {
   return Vector(x, y)
 }
 
-function Boundry(boundry) {
-  if(!(this instanceof Boundry))
-    return new Boundry(boundry)
+function Boundary(boundary) {
+  if(!(this instanceof Boundary))
+    return new Boundary(boundary)
 
-  this.left = (typeof boundry.left !== 'undefined') ? boundry.left : -Infinity
-  this.right = (typeof boundry.right !== 'undefined') ? boundry.right : Infinity
-  this.top = (typeof boundry.top !== 'undefined') ? boundry.top : -Infinity
-  this.bottom = (typeof boundry.bottom !== 'undefined') ? boundry.bottom : Infinity
+  this.left = (typeof boundary.left !== 'undefined') ? boundary.left : -Infinity
+  this.right = (typeof boundary.right !== 'undefined') ? boundary.right : Infinity
+  this.top = (typeof boundary.top !== 'undefined') ? boundary.top : -Infinity
+  this.bottom = (typeof boundary.bottom !== 'undefined') ? boundary.bottom : Infinity
 }
 
-Boundry.prototype.contains = function(pt) {
+Boundary.prototype.contains = function(pt) {
   return pt.x >= this.left &&
          pt.x <= this.right &&
          pt.y >= this.top &&
          pt.y <= this.bottom
 }
 
-Boundry.prototype.nearestIntersect = function(point, velocity) {
+Boundary.prototype.nearestIntersect = function(point, velocity) {
   var direction = Vector(velocity).normalize()
     , point = Vector(point)
     , isect
@@ -478,16 +478,17 @@ Boundry.prototype.nearestIntersect = function(point, velocity) {
     return isect
 
   //if the velocity is zero, or it didn't intersect any lines (outside the box)
-  //just send it it the nearest boundry
+  //just send it it the nearest boundary
   distX = (Math.abs(point.x - this.left) < Math.abs(point.x - this.right)) ? this.left : this.right
   distY = (Math.abs(point.y - this.top) < Math.abs(point.y - this.bottom)) ? this.top : this.bottom
 
   return (distX < distY) ? Vector(distX, point.y) : Vector(point.x, distY)
 }
+
 },{"./vector":16}],8:[function(require,module,exports){
 var Body = require('./body')
 var simulation = require('./simulation')
-var Boundry = require('./boundry')
+var Boundary = require('./boundary')
 var Animation = require('./animation')
 
 var Decelerate = module.exports = Animation({
@@ -497,7 +498,7 @@ var Decelerate = module.exports = Animation({
   onStart: function(velocity, from, to, opts, update, done) {
     var direction = to.sub(from).normalize()
       , deceleration = direction.mult(opts.deceleration).negate()
-      , boundry = Boundry({
+      , boundary = Boundary({
       left: Math.min(to.x, from.x),
       right: Math.max(to.x, from.x),
       top: Math.min(to.y, from.y),
@@ -513,7 +514,7 @@ var Decelerate = module.exports = Animation({
       update: function(position, velocity) {
         if(!direction.directionEqual(velocity)) {
           update.cancel(position, { x: 0, y: 0 })
-        } else if(boundry.contains(position)) {
+        } else if(boundary.contains(position)) {
           update.state(position, velocity)
         } else {
           update.done(to, velocity)
@@ -528,7 +529,7 @@ var Decelerate = module.exports = Animation({
   }
 })
 
-},{"./animation":4,"./body":6,"./boundry":7,"./simulation":13}],9:[function(require,module,exports){
+},{"./animation":4,"./body":6,"./boundary":7,"./simulation":13}],9:[function(require,module,exports){
 var Emitter = require('component-emitter')
   , defaults = require('lodash.defaults')
 
@@ -548,6 +549,14 @@ function Drag(phys, opts, start) {
   }
 
   this._opts = defaults({}, defaultOpts, opts)
+
+  //Warn of deprecated option
+  if(this._opts.boundry){
+    console.warn("Warning: Misspelled option 'boundry' is being deprecated. Please use 'boundary' instead.");
+    this._opts.boundary = this._opts.boundry;
+    delete this._opts.boundry;
+  }
+
   handles = this._opts.handle
 
 
@@ -588,7 +597,7 @@ Drag.prototype._start = function(evt) {
   evt.preventDefault()
   this._mousedown = true
   this._interaction = this._phys.interact({
-    boundry: this._opts.boundry,
+    boundary: this._opts.boundary,
     damping: this._opts.damping,
     direction: this._opts.direction
   })
@@ -615,7 +624,7 @@ Drag.prototype._end = function(evt) {
   this.emit('end', evt)
 }
 
-},{"component-emitter":20,"lodash.defaults":21}],10:[function(require,module,exports){
+},{"component-emitter":17,"lodash.defaults":18}],10:[function(require,module,exports){
 var simulation = require('./simulation')
 var Vector = require('./vector')
 var Renderer = require('./renderer')
@@ -626,7 +635,7 @@ var Decelerate = require('./decelerate')
 var Accelerate = require('./accelerate')
 var Drag = require('./drag')
 var Interact = require('./interact')
-var Boundry = require('./boundry')
+var Boundary = require('./boundary')
 var Promise = window.Promise || require('promise')
 
 module.exports = Physics
@@ -652,7 +661,8 @@ function Physics(rendererOrEls) {
   this._velocity = Vector(0, 0)
 }
 
-Physics.Boundry = Boundry
+Physics.Boundary = Boundary
+Physics.Boundry = Boundary
 Physics.Vector = Vector
 Physics.Promise = Promise
 
@@ -729,18 +739,19 @@ Physics.prototype.accelerate = function(opts) {
 Physics.prototype.attachSpring = function(attachment, opts) {
   return new AttachSpring(this, attachment, opts)
 }
-},{"./accelerate":3,"./attach-spring":5,"./boundry":7,"./decelerate":8,"./drag":9,"./interact":11,"./renderer":12,"./simulation":13,"./spring":14,"./vector":16,"lodash.defaults":21,"promise":28}],11:[function(require,module,exports){
+
+},{"./accelerate":3,"./attach-spring":5,"./boundary":7,"./decelerate":8,"./drag":9,"./interact":11,"./renderer":12,"./simulation":13,"./spring":14,"./vector":16,"lodash.defaults":18,"promise":25}],11:[function(require,module,exports){
 var defaults = require('lodash.defaults')
 var Velocity = require('touch-velocity')
 var Vector = require('./vector')
-var Promise = require('Promise')
+var Promise = require('promise')
 var util = require('./util')
-var Boundry = require('./boundry')
+var Boundary = require('./boundary')
 
 module.exports = Interact
 
 var defaultOpts = {
-  boundry: Boundry({}),
+  boundary: Boundary({}),
   damping: 0,
   direction: 'both'
 }
@@ -749,11 +760,18 @@ function Interact(phys, opts) {
   this._phys = phys
   this._running = false
   this._opts = defaults({}, opts, defaultOpts)
+
+  //Warn of deprecated option
+  if(this._opts.boundry){
+    console.warn("Warning: Misspelled option 'boundry' is being deprecated. Please use 'boundary' instead.");
+    this._opts.boundary = this._opts.boundry;
+    delete this._opts.boundry;
+  }
 }
 
 Interact.prototype.position = function(x, y) {
   var direction = this._opts.direction
-    , boundry = this._opts.boundry
+    , boundary = this._opts.boundary
     , pos = Vector(x, y)
 
   if(direction !== 'both' && direction !== 'horizontal') pos.x = 0
@@ -764,7 +782,7 @@ Interact.prototype.position = function(x, y) {
 
   this._phys.velocity(this._veloX.getVelocity(), this._veloY.getVelocity())
 
-  pos = boundry.applyDamping(pos, this._opts.damping)
+  pos = boundary.applyDamping(pos, this._opts.damping)
 
   this._phys.position(pos)
 
@@ -819,10 +837,11 @@ Interact.prototype.end = function() {
   this._resolve({ velocity: this._phys.velocity(), position: this._phys.position() })
   return this._ended
 }
-},{"./boundry":7,"./util":15,"./vector":16,"Promise":18,"lodash.defaults":21,"touch-velocity":32}],12:[function(require,module,exports){
+
+},{"./boundary":7,"./util":15,"./vector":16,"lodash.defaults":18,"promise":25,"touch-velocity":29}],12:[function(require,module,exports){
 var prefixes = ['Webkit', 'Moz', 'Ms', 'ms']
 var calls = []
-var transformProp = prefixed('transform')
+var transformProp
 var raf = require('raf')
 
 function loop() {
@@ -846,7 +865,7 @@ function prefixed(prop) {
 }
 
 var transformsProperties = ['translate', 'translateX', 'translateY', 'translateZ',
-                  'rotate', 'rotateX', 'rotateY', 'rotateZ',
+                  'rotate', 'rotateX', 'rotateY', 'rotate3d', 'rotateZ',
                   'scale', 'scaleX', 'scaleY', 'scaleZ',
                   'skew', 'skewX', 'skewY', 'skewZ']
 
@@ -863,6 +882,9 @@ function Renderer(els) {
 
 Renderer.prototype.render = function() {
   if(!this.currentPosition) return
+
+  if(!transformProp)
+    transformProp = prefixed('transform')
   var transformsToApply
     , els = this.els
     , position = this.currentPosition
@@ -920,9 +942,10 @@ Renderer.prototype.update = function(x, y) {
   this.currentPosition = { x: x, y: y }
 }
 
-},{"raf":30}],13:[function(require,module,exports){
+},{"raf":27}],13:[function(require,module,exports){
 var Vector = require('./vector')
   , bodies = []
+  , raf = require('raf')
 
 function increment(a, b, c, d) {
   var vec = Vector(0, 0)
@@ -969,7 +992,7 @@ var currentTime = Date.now() / 1000
   , dt = 0.015
 
 function simulate() {
-  requestAnimationFrame(function() {
+  raf(function() {
     simulate()
     var newTime = Date.now() / 1000
     var frameTime = newTime - currentTime
@@ -1010,10 +1033,10 @@ module.exports.removeBody = function(body) {
     bodies.splice(index, 1)
 }
 
-},{"./vector":16}],14:[function(require,module,exports){
+},{"./vector":16,"raf":27}],14:[function(require,module,exports){
 var Body = require('./body')
 var simulation = require('./simulation')
-var Boundry = require('./boundry')
+var Boundary = require('./boundary')
 var Animation = require('./animation')
 
 var Spring = module.exports = Animation({
@@ -1043,7 +1066,7 @@ var Spring = module.exports = Animation({
   }
 })
 
-},{"./animation":4,"./body":6,"./boundry":7,"./simulation":13}],15:[function(require,module,exports){
+},{"./animation":4,"./body":6,"./boundary":7,"./simulation":13}],15:[function(require,module,exports){
 var Vector = require('./vector')
 function vertex(a, b) {
   return -b / (2 * a)
@@ -1216,6 +1239,405 @@ Vector.prototype.lerp = function(vector, alpha) {
 }
 
 },{}],17:[function(require,module,exports){
+
+/**
+ * Expose `Emitter`.
+ */
+
+module.exports = Emitter;
+
+/**
+ * Initialize a new `Emitter`.
+ *
+ * @api public
+ */
+
+function Emitter(obj) {
+  if (obj) return mixin(obj);
+};
+
+/**
+ * Mixin the emitter properties.
+ *
+ * @param {Object} obj
+ * @return {Object}
+ * @api private
+ */
+
+function mixin(obj) {
+  for (var key in Emitter.prototype) {
+    obj[key] = Emitter.prototype[key];
+  }
+  return obj;
+}
+
+/**
+ * Listen on the given `event` with `fn`.
+ *
+ * @param {String} event
+ * @param {Function} fn
+ * @return {Emitter}
+ * @api public
+ */
+
+Emitter.prototype.on =
+Emitter.prototype.addEventListener = function(event, fn){
+  this._callbacks = this._callbacks || {};
+  (this._callbacks[event] = this._callbacks[event] || [])
+    .push(fn);
+  return this;
+};
+
+/**
+ * Adds an `event` listener that will be invoked a single
+ * time then automatically removed.
+ *
+ * @param {String} event
+ * @param {Function} fn
+ * @return {Emitter}
+ * @api public
+ */
+
+Emitter.prototype.once = function(event, fn){
+  var self = this;
+  this._callbacks = this._callbacks || {};
+
+  function on() {
+    self.off(event, on);
+    fn.apply(this, arguments);
+  }
+
+  on.fn = fn;
+  this.on(event, on);
+  return this;
+};
+
+/**
+ * Remove the given callback for `event` or all
+ * registered callbacks.
+ *
+ * @param {String} event
+ * @param {Function} fn
+ * @return {Emitter}
+ * @api public
+ */
+
+Emitter.prototype.off =
+Emitter.prototype.removeListener =
+Emitter.prototype.removeAllListeners =
+Emitter.prototype.removeEventListener = function(event, fn){
+  this._callbacks = this._callbacks || {};
+
+  // all
+  if (0 == arguments.length) {
+    this._callbacks = {};
+    return this;
+  }
+
+  // specific event
+  var callbacks = this._callbacks[event];
+  if (!callbacks) return this;
+
+  // remove all handlers
+  if (1 == arguments.length) {
+    delete this._callbacks[event];
+    return this;
+  }
+
+  // remove specific handler
+  var cb;
+  for (var i = 0; i < callbacks.length; i++) {
+    cb = callbacks[i];
+    if (cb === fn || cb.fn === fn) {
+      callbacks.splice(i, 1);
+      break;
+    }
+  }
+  return this;
+};
+
+/**
+ * Emit `event` with the given args.
+ *
+ * @param {String} event
+ * @param {Mixed} ...
+ * @return {Emitter}
+ */
+
+Emitter.prototype.emit = function(event){
+  this._callbacks = this._callbacks || {};
+  var args = [].slice.call(arguments, 1)
+    , callbacks = this._callbacks[event];
+
+  if (callbacks) {
+    callbacks = callbacks.slice(0);
+    for (var i = 0, len = callbacks.length; i < len; ++i) {
+      callbacks[i].apply(this, args);
+    }
+  }
+
+  return this;
+};
+
+/**
+ * Return array of callbacks for `event`.
+ *
+ * @param {String} event
+ * @return {Array}
+ * @api public
+ */
+
+Emitter.prototype.listeners = function(event){
+  this._callbacks = this._callbacks || {};
+  return this._callbacks[event] || [];
+};
+
+/**
+ * Check if this emitter has `event` handlers.
+ *
+ * @param {String} event
+ * @return {Boolean}
+ * @api public
+ */
+
+Emitter.prototype.hasListeners = function(event){
+  return !! this.listeners(event).length;
+};
+
+},{}],18:[function(require,module,exports){
+/**
+ * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
+ * Build: `lodash modularize modern exports="npm" -o ./npm/`
+ * Copyright 2012-2013 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.5.2 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <http://lodash.com/license>
+ */
+var keys = require('lodash.keys'),
+    objectTypes = require('lodash._objecttypes');
+
+/**
+ * Assigns own enumerable properties of source object(s) to the destination
+ * object for all destination properties that resolve to `undefined`. Once a
+ * property is set, additional defaults of the same property will be ignored.
+ *
+ * @static
+ * @memberOf _
+ * @type Function
+ * @category Objects
+ * @param {Object} object The destination object.
+ * @param {...Object} [source] The source objects.
+ * @param- {Object} [guard] Allows working with `_.reduce` without using its
+ *  `key` and `object` arguments as sources.
+ * @returns {Object} Returns the destination object.
+ * @example
+ *
+ * var object = { 'name': 'barney' };
+ * _.defaults(object, { 'name': 'fred', 'employer': 'slate' });
+ * // => { 'name': 'barney', 'employer': 'slate' }
+ */
+var defaults = function(object, source, guard) {
+  var index, iterable = object, result = iterable;
+  if (!iterable) return result;
+  var args = arguments,
+      argsIndex = 0,
+      argsLength = typeof guard == 'number' ? 2 : args.length;
+  while (++argsIndex < argsLength) {
+    iterable = args[argsIndex];
+    if (iterable && objectTypes[typeof iterable]) {
+    var ownIndex = -1,
+        ownProps = objectTypes[typeof iterable] && keys(iterable),
+        length = ownProps ? ownProps.length : 0;
+
+    while (++ownIndex < length) {
+      index = ownProps[ownIndex];
+      if (typeof result[index] == 'undefined') result[index] = iterable[index];
+    }
+    }
+  }
+  return result
+};
+
+module.exports = defaults;
+
+},{"lodash._objecttypes":19,"lodash.keys":20}],19:[function(require,module,exports){
+/**
+ * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
+ * Build: `lodash modularize modern exports="npm" -o ./npm/`
+ * Copyright 2012-2013 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.5.2 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <http://lodash.com/license>
+ */
+
+/** Used to determine if values are of the language type Object */
+var objectTypes = {
+  'boolean': false,
+  'function': true,
+  'object': true,
+  'number': false,
+  'string': false,
+  'undefined': false
+};
+
+module.exports = objectTypes;
+
+},{}],20:[function(require,module,exports){
+/**
+ * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
+ * Build: `lodash modularize modern exports="npm" -o ./npm/`
+ * Copyright 2012-2013 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.5.2 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <http://lodash.com/license>
+ */
+var isNative = require('lodash._isnative'),
+    isObject = require('lodash.isobject'),
+    shimKeys = require('lodash._shimkeys');
+
+/* Native method shortcuts for methods with the same name as other `lodash` methods */
+var nativeKeys = isNative(nativeKeys = Object.keys) && nativeKeys;
+
+/**
+ * Creates an array composed of the own enumerable property names of an object.
+ *
+ * @static
+ * @memberOf _
+ * @category Objects
+ * @param {Object} object The object to inspect.
+ * @returns {Array} Returns an array of property names.
+ * @example
+ *
+ * _.keys({ 'one': 1, 'two': 2, 'three': 3 });
+ * // => ['one', 'two', 'three'] (property order is not guaranteed across environments)
+ */
+var keys = !nativeKeys ? shimKeys : function(object) {
+  if (!isObject(object)) {
+    return [];
+  }
+  return nativeKeys(object);
+};
+
+module.exports = keys;
+
+},{"lodash._isnative":21,"lodash._shimkeys":22,"lodash.isobject":23}],21:[function(require,module,exports){
+/**
+ * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
+ * Build: `lodash modularize modern exports="npm" -o ./npm/`
+ * Copyright 2012-2013 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.5.2 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <http://lodash.com/license>
+ */
+
+/** Used for native method references */
+var objectProto = Object.prototype;
+
+/** Used to resolve the internal [[Class]] of values */
+var toString = objectProto.toString;
+
+/** Used to detect if a method is native */
+var reNative = RegExp('^' +
+  String(toString)
+    .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    .replace(/toString| for [^\]]+/g, '.*?') + '$'
+);
+
+/**
+ * Checks if `value` is a native function.
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if the `value` is a native function, else `false`.
+ */
+function isNative(value) {
+  return typeof value == 'function' && reNative.test(value);
+}
+
+module.exports = isNative;
+
+},{}],22:[function(require,module,exports){
+/**
+ * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
+ * Build: `lodash modularize modern exports="npm" -o ./npm/`
+ * Copyright 2012-2013 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.5.2 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <http://lodash.com/license>
+ */
+var objectTypes = require('lodash._objecttypes');
+
+/** Used for native method references */
+var objectProto = Object.prototype;
+
+/** Native method shortcuts */
+var hasOwnProperty = objectProto.hasOwnProperty;
+
+/**
+ * A fallback implementation of `Object.keys` which produces an array of the
+ * given object's own enumerable property names.
+ *
+ * @private
+ * @type Function
+ * @param {Object} object The object to inspect.
+ * @returns {Array} Returns an array of property names.
+ */
+var shimKeys = function(object) {
+  var index, iterable = object, result = [];
+  if (!iterable) return result;
+  if (!(objectTypes[typeof object])) return result;
+    for (index in iterable) {
+      if (hasOwnProperty.call(iterable, index)) {
+        result.push(index);
+      }
+    }
+  return result
+};
+
+module.exports = shimKeys;
+
+},{"lodash._objecttypes":19}],23:[function(require,module,exports){
+/**
+ * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
+ * Build: `lodash modularize modern exports="npm" -o ./npm/`
+ * Copyright 2012-2013 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.5.2 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <http://lodash.com/license>
+ */
+var objectTypes = require('lodash._objecttypes');
+
+/**
+ * Checks if `value` is the language type of Object.
+ * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+ *
+ * @static
+ * @memberOf _
+ * @category Objects
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if the `value` is an object, else `false`.
+ * @example
+ *
+ * _.isObject({});
+ * // => true
+ *
+ * _.isObject([1, 2, 3]);
+ * // => true
+ *
+ * _.isObject(1);
+ * // => false
+ */
+function isObject(value) {
+  // check if the value is the ECMAScript language type of Object
+  // http://es5.github.io/#x8
+  // and avoid a V8 bug
+  // http://code.google.com/p/v8/issues/detail?id=2291
+  return !!(value && objectTypes[typeof value]);
+}
+
+module.exports = isObject;
+
+},{"lodash._objecttypes":19}],24:[function(require,module,exports){
 'use strict';
 
 var asap = require('asap')
@@ -1322,7 +1744,7 @@ function doResolve(fn, onFulfilled, onRejected) {
   }
 }
 
-},{"asap":19}],18:[function(require,module,exports){
+},{"asap":26}],25:[function(require,module,exports){
 'use strict';
 
 //This file contains then/promise specific extensions to the core promise API
@@ -1504,7 +1926,7 @@ Promise.prototype['catch'] = function (onRejected) {
   return this.then(null, onRejected);
 }
 
-},{"./core.js":17,"asap":19}],19:[function(require,module,exports){
+},{"./core.js":24,"asap":26}],26:[function(require,module,exports){
 (function (process){
 
 // Use the fastest possible means to execute a task in a future turn
@@ -1621,412 +2043,7 @@ module.exports = asap;
 
 
 }).call(this,require("oMfpAn"))
-},{"oMfpAn":2}],20:[function(require,module,exports){
-
-/**
- * Expose `Emitter`.
- */
-
-module.exports = Emitter;
-
-/**
- * Initialize a new `Emitter`.
- *
- * @api public
- */
-
-function Emitter(obj) {
-  if (obj) return mixin(obj);
-};
-
-/**
- * Mixin the emitter properties.
- *
- * @param {Object} obj
- * @return {Object}
- * @api private
- */
-
-function mixin(obj) {
-  for (var key in Emitter.prototype) {
-    obj[key] = Emitter.prototype[key];
-  }
-  return obj;
-}
-
-/**
- * Listen on the given `event` with `fn`.
- *
- * @param {String} event
- * @param {Function} fn
- * @return {Emitter}
- * @api public
- */
-
-Emitter.prototype.on =
-Emitter.prototype.addEventListener = function(event, fn){
-  this._callbacks = this._callbacks || {};
-  (this._callbacks[event] = this._callbacks[event] || [])
-    .push(fn);
-  return this;
-};
-
-/**
- * Adds an `event` listener that will be invoked a single
- * time then automatically removed.
- *
- * @param {String} event
- * @param {Function} fn
- * @return {Emitter}
- * @api public
- */
-
-Emitter.prototype.once = function(event, fn){
-  var self = this;
-  this._callbacks = this._callbacks || {};
-
-  function on() {
-    self.off(event, on);
-    fn.apply(this, arguments);
-  }
-
-  on.fn = fn;
-  this.on(event, on);
-  return this;
-};
-
-/**
- * Remove the given callback for `event` or all
- * registered callbacks.
- *
- * @param {String} event
- * @param {Function} fn
- * @return {Emitter}
- * @api public
- */
-
-Emitter.prototype.off =
-Emitter.prototype.removeListener =
-Emitter.prototype.removeAllListeners =
-Emitter.prototype.removeEventListener = function(event, fn){
-  this._callbacks = this._callbacks || {};
-
-  // all
-  if (0 == arguments.length) {
-    this._callbacks = {};
-    return this;
-  }
-
-  // specific event
-  var callbacks = this._callbacks[event];
-  if (!callbacks) return this;
-
-  // remove all handlers
-  if (1 == arguments.length) {
-    delete this._callbacks[event];
-    return this;
-  }
-
-  // remove specific handler
-  var cb;
-  for (var i = 0; i < callbacks.length; i++) {
-    cb = callbacks[i];
-    if (cb === fn || cb.fn === fn) {
-      callbacks.splice(i, 1);
-      break;
-    }
-  }
-  return this;
-};
-
-/**
- * Emit `event` with the given args.
- *
- * @param {String} event
- * @param {Mixed} ...
- * @return {Emitter}
- */
-
-Emitter.prototype.emit = function(event){
-  this._callbacks = this._callbacks || {};
-  var args = [].slice.call(arguments, 1)
-    , callbacks = this._callbacks[event];
-
-  if (callbacks) {
-    callbacks = callbacks.slice(0);
-    for (var i = 0, len = callbacks.length; i < len; ++i) {
-      callbacks[i].apply(this, args);
-    }
-  }
-
-  return this;
-};
-
-/**
- * Return array of callbacks for `event`.
- *
- * @param {String} event
- * @return {Array}
- * @api public
- */
-
-Emitter.prototype.listeners = function(event){
-  this._callbacks = this._callbacks || {};
-  return this._callbacks[event] || [];
-};
-
-/**
- * Check if this emitter has `event` handlers.
- *
- * @param {String} event
- * @return {Boolean}
- * @api public
- */
-
-Emitter.prototype.hasListeners = function(event){
-  return !! this.listeners(event).length;
-};
-
-},{}],21:[function(require,module,exports){
-/**
- * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
- * Build: `lodash modularize modern exports="npm" -o ./npm/`
- * Copyright 2012-2013 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.5.2 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <http://lodash.com/license>
- */
-var keys = require('lodash.keys'),
-    objectTypes = require('lodash._objecttypes');
-
-/**
- * Assigns own enumerable properties of source object(s) to the destination
- * object for all destination properties that resolve to `undefined`. Once a
- * property is set, additional defaults of the same property will be ignored.
- *
- * @static
- * @memberOf _
- * @type Function
- * @category Objects
- * @param {Object} object The destination object.
- * @param {...Object} [source] The source objects.
- * @param- {Object} [guard] Allows working with `_.reduce` without using its
- *  `key` and `object` arguments as sources.
- * @returns {Object} Returns the destination object.
- * @example
- *
- * var object = { 'name': 'barney' };
- * _.defaults(object, { 'name': 'fred', 'employer': 'slate' });
- * // => { 'name': 'barney', 'employer': 'slate' }
- */
-var defaults = function(object, source, guard) {
-  var index, iterable = object, result = iterable;
-  if (!iterable) return result;
-  var args = arguments,
-      argsIndex = 0,
-      argsLength = typeof guard == 'number' ? 2 : args.length;
-  while (++argsIndex < argsLength) {
-    iterable = args[argsIndex];
-    if (iterable && objectTypes[typeof iterable]) {
-    var ownIndex = -1,
-        ownProps = objectTypes[typeof iterable] && keys(iterable),
-        length = ownProps ? ownProps.length : 0;
-
-    while (++ownIndex < length) {
-      index = ownProps[ownIndex];
-      if (typeof result[index] == 'undefined') result[index] = iterable[index];
-    }
-    }
-  }
-  return result
-};
-
-module.exports = defaults;
-
-},{"lodash._objecttypes":22,"lodash.keys":23}],22:[function(require,module,exports){
-/**
- * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
- * Build: `lodash modularize modern exports="npm" -o ./npm/`
- * Copyright 2012-2013 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.5.2 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <http://lodash.com/license>
- */
-
-/** Used to determine if values are of the language type Object */
-var objectTypes = {
-  'boolean': false,
-  'function': true,
-  'object': true,
-  'number': false,
-  'string': false,
-  'undefined': false
-};
-
-module.exports = objectTypes;
-
-},{}],23:[function(require,module,exports){
-/**
- * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
- * Build: `lodash modularize modern exports="npm" -o ./npm/`
- * Copyright 2012-2013 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.5.2 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <http://lodash.com/license>
- */
-var isNative = require('lodash._isnative'),
-    isObject = require('lodash.isobject'),
-    shimKeys = require('lodash._shimkeys');
-
-/* Native method shortcuts for methods with the same name as other `lodash` methods */
-var nativeKeys = isNative(nativeKeys = Object.keys) && nativeKeys;
-
-/**
- * Creates an array composed of the own enumerable property names of an object.
- *
- * @static
- * @memberOf _
- * @category Objects
- * @param {Object} object The object to inspect.
- * @returns {Array} Returns an array of property names.
- * @example
- *
- * _.keys({ 'one': 1, 'two': 2, 'three': 3 });
- * // => ['one', 'two', 'three'] (property order is not guaranteed across environments)
- */
-var keys = !nativeKeys ? shimKeys : function(object) {
-  if (!isObject(object)) {
-    return [];
-  }
-  return nativeKeys(object);
-};
-
-module.exports = keys;
-
-},{"lodash._isnative":24,"lodash._shimkeys":25,"lodash.isobject":26}],24:[function(require,module,exports){
-/**
- * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
- * Build: `lodash modularize modern exports="npm" -o ./npm/`
- * Copyright 2012-2013 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.5.2 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <http://lodash.com/license>
- */
-
-/** Used for native method references */
-var objectProto = Object.prototype;
-
-/** Used to resolve the internal [[Class]] of values */
-var toString = objectProto.toString;
-
-/** Used to detect if a method is native */
-var reNative = RegExp('^' +
-  String(toString)
-    .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    .replace(/toString| for [^\]]+/g, '.*?') + '$'
-);
-
-/**
- * Checks if `value` is a native function.
- *
- * @private
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if the `value` is a native function, else `false`.
- */
-function isNative(value) {
-  return typeof value == 'function' && reNative.test(value);
-}
-
-module.exports = isNative;
-
-},{}],25:[function(require,module,exports){
-/**
- * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
- * Build: `lodash modularize modern exports="npm" -o ./npm/`
- * Copyright 2012-2013 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.5.2 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <http://lodash.com/license>
- */
-var objectTypes = require('lodash._objecttypes');
-
-/** Used for native method references */
-var objectProto = Object.prototype;
-
-/** Native method shortcuts */
-var hasOwnProperty = objectProto.hasOwnProperty;
-
-/**
- * A fallback implementation of `Object.keys` which produces an array of the
- * given object's own enumerable property names.
- *
- * @private
- * @type Function
- * @param {Object} object The object to inspect.
- * @returns {Array} Returns an array of property names.
- */
-var shimKeys = function(object) {
-  var index, iterable = object, result = [];
-  if (!iterable) return result;
-  if (!(objectTypes[typeof object])) return result;
-    for (index in iterable) {
-      if (hasOwnProperty.call(iterable, index)) {
-        result.push(index);
-      }
-    }
-  return result
-};
-
-module.exports = shimKeys;
-
-},{"lodash._objecttypes":22}],26:[function(require,module,exports){
-/**
- * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
- * Build: `lodash modularize modern exports="npm" -o ./npm/`
- * Copyright 2012-2013 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.5.2 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <http://lodash.com/license>
- */
-var objectTypes = require('lodash._objecttypes');
-
-/**
- * Checks if `value` is the language type of Object.
- * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
- *
- * @static
- * @memberOf _
- * @category Objects
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if the `value` is an object, else `false`.
- * @example
- *
- * _.isObject({});
- * // => true
- *
- * _.isObject([1, 2, 3]);
- * // => true
- *
- * _.isObject(1);
- * // => false
- */
-function isObject(value) {
-  // check if the value is the ECMAScript language type of Object
-  // http://es5.github.io/#x8
-  // and avoid a V8 bug
-  // http://code.google.com/p/v8/issues/detail?id=2291
-  return !!(value && objectTypes[typeof value]);
-}
-
-module.exports = isObject;
-
-},{"lodash._objecttypes":22}],27:[function(require,module,exports){
-module.exports=require(17)
-},{"asap":29}],28:[function(require,module,exports){
-module.exports=require(18)
-},{"./core.js":27,"asap":29}],29:[function(require,module,exports){
-module.exports=require(19)
-},{"oMfpAn":2}],30:[function(require,module,exports){
+},{"oMfpAn":2}],27:[function(require,module,exports){
 var now = require('performance-now')
   , global = typeof window === 'undefined' ? {} : window
   , vendors = ['moz', 'webkit']
@@ -2108,7 +2125,7 @@ module.exports.cancel = function() {
   caf.apply(global, arguments)
 }
 
-},{"performance-now":31}],31:[function(require,module,exports){
+},{"performance-now":28}],28:[function(require,module,exports){
 (function (process){
 // Generated by CoffeeScript 1.6.3
 (function() {
@@ -2148,7 +2165,7 @@ module.exports.cancel = function() {
 */
 
 }).call(this,require("oMfpAn"))
-},{"oMfpAn":2}],32:[function(require,module,exports){
+},{"oMfpAn":2}],29:[function(require,module,exports){
 module.exports = Velocity
 
 function Velocity() {
